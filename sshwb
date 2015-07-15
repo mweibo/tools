@@ -1,0 +1,29 @@
+#!/usr/bin/expect -f
+set user "用户名"
+set password "通道机密码"
+set otp_prefix "口令前缀"
+set tunnel "通道机ip"
+
+log_user 0
+set timeout 10
+if ($argc==0) {
+	send_user "Require dynamic code";
+	exit;
+}
+set otp "$otp_prefix[lindex $argv 0]"
+
+# spawn sshsina
+send_user "Connecting tunnel: $tunnel...\n"
+spawn ssh $user@$tunnel;
+expect "password:" 
+send "$password\n"
+
+expect "PASSCODE:" 
+send "$otp\n"
+expect {
+	"Enter:" {send "1\n"}
+	"Access Denied" {puts "Bad otp code!\n"; exit;}
+}
+
+send_user "interact...\n"
+interact;
